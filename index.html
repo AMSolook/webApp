@@ -1,42 +1,130 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web App</title>
-    <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
-</head>
-
-<body>
-    <h1>Hello World2!</h1>
-</body>
-
-</html>
-
-<style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>مینی‌اپ من</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
     body {
-        background-color: greenyellow;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--tg-theme-bg-color, #ffffff);
+      color: var(--tg-theme-text-color, #000000);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 { color: var(--tg-theme-link-color, #2481cc); text-align: center; }
+    .card {
+      background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    button {
+      background: var(--tg-theme-button-color, #2481cc);
+      color: var(--tg-theme-button-text-color, #ffffff);
+      border: none;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      width: 100%;
+      margin: 10px 0;
+      cursor: pointer;
+    }
+    .info { font-size: 14px; color: var(--tg-theme-hint-color, #999999); }
+  </style>
+</head>
+<body>
+
+  <h1>سلام از مینی‌اپ!</h1>
+
+  <div class="card">
+    <p><strong>نام:</strong> <span id="first_name">-</span></p>
+    <p><strong>آیدی:</strong> <span id="user_id">-</span></p>
+    <p><strong>یوزرنیم:</strong> <span id="username">-</span></p>
+  </div>
+
+  <div class="card">
+    <button onclick="sendTest()">ارسال تست ساده</button>
+    <button onclick="sendOrder()">ثبت سفارش (۵۸۰,۰۰۰ تومان)</button>
+    <button onclick="sendBigData()">ارسال داده بزرگ (فرم کامل)</button>
+    <button onclick="closeApp()">بستن مینی‌اپ</button>
+  </div>
+
+  <p class="info" id="status">آماده</p>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    // نمایش اطلاعات کاربر
+    const user = tg.initDataUnsafe.user;
+    if (user) {
+      document.getElementById('first_name').textContent = user.first_name || 'ندارد';
+      document.getElementById('user_id').textContent = user.id;
+      document.getElementById('username').textContent = user.username ? '@' + user.username : 'ندارد';
     }
 
-    h1 {
-        font-size: 30px;
+    function updateStatus(text, color = '') {
+      const el = document.getElementById('status');
+      el.textContent = text;
+      if (color) el.style.color = color;
     }
-</style>
 
-<script>
-    Telegram.WebApp.ready();
-    Telegram.WebApp.expand();
+    function sendTest() {
+      const data = { action: "test", message: "سلام از مینی‌اپ!" };
+      tg.sendData(JSON.stringify(data));
+      updateStatus("داده تست ارسال شد ✅", "green");
+    }
 
-    // مثلاً وقتی کاربر دکمه "ثبت سفارش" رو زد
-    const order = {
-      action: "create_order",
-      items: ["کتاب برنامه‌نویسی", "ماژیک هایلایت"],
-      total: 580000
-    };
-    
-    Telegram.WebApp.sendData(JSON.stringify(order));
+    function sendOrder() {
+      const order = {
+        action: "create_order",
+        items: ["کتاب Dart", "تی‌شرت xAI", "ماگ برنامه‌نویس"],
+        total: 580000,
+        currency: "IRR"
+      };
+      tg.sendData(JSON.stringify(order));
 
-</script>
+      // دکمه اصلی پایین صفحه رو فعال کن
+      tg.MainButton.setText(`پرداخت ${order.total.toLocaleString()} تومان`);
+      tg.MainButton.show();
+      tg.MainButton.enable();
+      tg.MainButton.onClick(() => {
+        tg.sendData(JSON.stringify(order));
+        tg.MainButton.showProgress();
+      });
 
+      updateStatus("سفارش ارسال شد – منتظر فاکتور باشید", "green");
+    }
 
+    function sendBigData() {
+      const form = {
+        action: "register_form",
+        name: "علی رضایی",
+        phone: "09123456789",
+        address: "تهران، خیابان آزادی، پلاک ۱۲۳",
+        products: ["کتاب", "دوره آموزشی"],
+        note: "لطفاً با پیک ارسال کنید"
+      };
+      tg.sendData(JSON.stringify(form));
+      updateStatus("فرم کامل ارسال شد ✅", "green");
+    }
+
+    function closeApp() {
+      tg.close();
+    }
+
+    // اگر بات داده‌ای فرستاده باشه (مثلاً سبد خرید)
+    if (tg.initDataUnsafe.web_app_data) {
+      try {
+        const received = JSON.parse(tg.initDataUnsafe.web_app_data.data);
+        updateStatus(`داده از بات دریافت شد: ${JSON.stringify(received)}`, "blue");
+      } catch (e) {}
+    }
+  </script>
+</body>
+</html>
