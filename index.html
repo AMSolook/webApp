@@ -27,4 +27,17 @@
 <script>
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
+
+    Telegram.WebApp.MainButton.text = "پرداخت ۵۸۰,۰۰۰ تومان";
+    Telegram.WebApp.MainButton.color = "#31b545";
+    Telegram.WebApp.MainButton.textColor = "#ffffff";
+    Telegram.WebApp.MainButton.show();
+    Telegram.WebApp.MainButton.enable();
+    
+    Telegram.WebApp.MainButton.onClick(() => {
+      const order = { action: "create_order", total: 580000 };
+      Telegram.WebApp.sendData(JSON.stringify(order));
+      Telegram.WebApp.MainButton.showProgress(); // لودینگ نشون بده
+    });
+
 </script>
